@@ -62,14 +62,14 @@ The *do-notation* of networking I/O using YAML
 
 ```yaml
 Scenario: |
-	request landing page
+  request landing page
 
 Given:
-	url: http://example.com
+  url: http://example.com
 
 When:
-	header:
-		Accept-Language: en
+  header:
+    Accept-Language: en
 ```
 
 The same I/O in Erlang flavoured syntax

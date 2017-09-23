@@ -46,7 +46,7 @@ However, **YAML** is an advised syntax for *behaviour driven development* that b
 
 The *do-notation* implements the **Given**/**When**/**Then** and connects cause-and-effect to the networking concept of input/process/output:
 
-1. **Given** identity the communication context and known state for the use-case
+1. **Given** identify the communication context and known state for the use-case
 2. **When** defines key actions for the interaction with remote host.
 3. **Then** observes output of remote hosts, validate its correctness and output the result.
 

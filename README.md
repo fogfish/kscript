@@ -17,7 +17,8 @@ curl ${GIVEN} ${WHEN} ${THEN}
 ``` 
 
 
-A scripting language is the challenge to solve here. An expressive language is required to cover the variety of communication protocols and behaviour use-cases. A pure functional languages fits very well to express communication behaviour. It gives a rich techniques to hide the communication complexity using *monads* as abstraction. Monads are computation that defines a behaviour as a chain of operations wrapped into IO-monad.
+A scripting language is the challenge to solve here. An expressive language is required to cover the variety of communication protocols and behaviour use-cases. A pure functional languages fits very well to express communication behaviour. It gives a rich techniques to hide the communication complexity using *monads* as abstraction. The IO-monads helps us to compose a chain of network operations and represent them as pure computation.
+
  
 ### scripting language
 
@@ -25,7 +26,7 @@ The *networking behaviour* is defined either using Erlang flavoured syntax (a va
 
 * the ability to spawn a huge number networking sessions, real-time data processing and accuracy of measurements are major requirements that impacted on selection of Erlang as a primary runtime environment.
 
-* the adoption of scripting requires that whole team understand what is wanted. Therefore, `K.script` supports the definition of the behaviour in non-technical language (ubiquitous language) such as YAML, which is eventually compilable to native code. The usage of YAML for scripting has been proven by various Infrastructure-as-a-Code solutions.  
+* the adoption of scripting requires that whole team understand what is wanted (BDD implies that natural language is used to specify scenarious). Therefore, `K.script` supports the definition of the behaviour in non-technical language (ubiquitous language) such as YAML, which is eventually compilable to native code. The usage of YAML for scripting has been proven by various Infrastructure-as-a-Code solutions.  
 
 
 You script networking using **Behaviour as a Code** paradigm.
@@ -41,7 +42,7 @@ However, **YAML** is an advised syntax for *behaviour driven development* that b
 
 ### do-notation
 
-`K.script` uses the "do"-notation, so called monadic binding form. It is well know in functional programming languages such as [Haskell](https://en.wikibooks.org/wiki/Haskell/do_notation), [Scala](http://docs.scala-lang.org/tutorials/tour/sequence-comprehensions.html) and [Erlang](https://github.com/fogfish/datum/blob/master/doc/monad.md). The *networking behaviour* is a collection of nested `do-notation` in context of a [state monad](https://acm.wustl.edu/functional/state-monad.php).
+`K.script` uses the "do"-notation, so called monadic binding form. It is well know in functional programming languages such as [Haskell](https://en.wikibooks.org/wiki/Haskell/do_notation), [Scala](http://docs.scala-lang.org/tutorials/tour/sequence-comprehensions.html) and [Erlang](https://github.com/fogfish/datum/blob/master/doc/monad.md). The *networking behaviour* is a collection of composed `do-notation` in context of a [state monad](https://acm.wustl.edu/functional/state-monad.php).
 
 The *do-notation* implements the **Given**/**When**/**Then** and connects cause-and-effect to the networking concept of input/process/output:
 
@@ -72,20 +73,20 @@ When:
     Accept-Language: en
 ```
 
-The same I/O in Erlang flavoured syntax
+and equivalent I/O declaration in Erlang flavoured syntax
 
 ```erlang
 request_lannding_page() ->
-	do([kscript ||
-		_ /= 'Given'(),
-		_ /= url("http://example.com"),
-		
-		_ /= 'When'(),
-		_ /= header('Accept-Language', en),
-		
-		_ /= 'Then'(),
-		return(_)
-	])
+   do([kscript ||
+      _ /= 'Given'(),
+      _ /= url("http://example.com"),
+      
+      _ /= 'When'(),
+      _ /= header('Accept-Language', en),
+      
+      _ /= 'Then'(),
+      return(_)
+   ]).
 ```
 
 

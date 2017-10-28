@@ -4,13 +4,52 @@ The *do-notation* implements the **Given**/**When**/**Then** and connects cause-
 
 **Given** identify the communication context. The **url** is mandatory element that defines a target and communication protocol.  
 
+```erlang
+-spec Given() -> datum:m_state(_).
+```
+
 **When** defines key actions for the interaction with remote host. It specify the protocol parameters, such headers or socket options.
 
-**Then** executes and interactions and observes output of remote hosts, validate its correctness and output the result. The implementation is responsible to transform a binary stream into appropriate format.
+```erlang
+-spec When() -> datum:m_state(_).
+```
 
-## Communication patterns
+**Then** executes and interactions and observes output of remote hosts, validate its correctness and output the result. The implementation is responsible to transform a socket communication into appropriate typed-stream.
 
-**request - response**
+```erlang
+-spec Then() -> datum:m_state(_).
+```
+
+## Network protocols
+
+**L4/L6 connection-oriented protocols.**
+
+*Given* and *When* setups the communication context, *Then* abstracts an incoming packets as byte stream, allowing to implement any arbitrary effect part.
+
+```erlang
+request() ->
+   do([kscript ||
+      _ /= 'Given'(),
+      _ /= url("tcp://127.0.0.1:3456"),
+      
+      _ /= 'When'(),
+      _ /= send(<<"HELLO\r\n">>),
+      
+      _ /= 'Then'(),
+      <<"OLLEH\r\n">> /= recv(7),
+      
+      _ /= send(<<"THERE\r\n">>) 
+      <<"EREHT\r\n">> /= recv(7)
+   ]).
+```
+
+**L4 connection-less protocol.**
+
+Same as above.
+
+**L7 request/response protocols.**
+
+*Given* and *When* setups the communication context, *Then* abstracts an incoming response into appropriate data type.
 
 ```erlang
 request() ->
@@ -27,31 +66,20 @@ request() ->
    ]).
 ```
 
-**send - recv**
+**L7 streaming protocols.**
+
+*Given* and *When* setups the communication context, *Then* abstracts an incoming packets as typed stream, allowing to implement any arbitrary effect part.
 
 ```erlang
 request() ->
    do([kscript ||
       _ /= 'Given'(),
-      _ /= url("tcp://httpbin.org:80"),
+      _ /= url("ws://127.0.0.1:80/websocket"),
       
       _ /= 'When'(),
-      _ /= send(<<"GET /ip HTTP/1.1\r\nHost: httpbin.org\r\n\r\n">>),
-      _ /= recv(1024)
+      _ /= header("Accept", "application/json"),
       
       _ /= 'Then'(),
-      %% return binary
-      %% [
-      %%    <<"HTTP/1.1 200 OK\r\n">>,
-      %%    <<"Connection: keep-alive\r\n">>,
-      %%    ...
-      %%    <<"\"origin\": \"192.168.0.1\""}>>
-      %% ].
-   ]).```
-
-
-
- connect cause-and-effect to connection-oriented L4/L6 protocols (e.g. tcp, ssl)
- connect cause-and-effect to connection-less L4 protocols (e.g. udp)
- connect cause-and-effect to request/response communication patterns (e.g. http, telnet, ...)
- connect cause-and-effect to streaming protocols
+      %% return a stream similar to L4
+   ]).
+```

@@ -28,7 +28,7 @@ The *do-notation* implements the **Given**/**When**/**Then** and connects cause-
 
 ```erlang
 request() ->
-   do([kscript ||
+   [kscript ||
       _ /= 'Given'(),
       _ /= url("tcp://127.0.0.1:3456"),
       
@@ -40,7 +40,7 @@ request() ->
       
       _ /= send(<<"THERE\r\n">>) 
       <<"EREHT\r\n">> /= recv(7)
-   ]).
+   ].
 ```
 
 **L4 connection-less protocol.**
@@ -53,7 +53,7 @@ Same as above.
 
 ```erlang
 request() ->
-   do([kscript ||
+   [kscript ||
       _ /= 'Given'(),
       _ /= url("http://httpbin.org/ip"),
       
@@ -63,7 +63,7 @@ request() ->
       _ /= 'Then'(),
       %% return json parsed as map
       %% #{<<"origin">> := <<"192.168.0.1">>} 
-   ]).
+   ].
 ```
 
 **L7 streaming protocols.**
@@ -72,7 +72,7 @@ request() ->
 
 ```erlang
 request() ->
-   do([kscript ||
+   [kscript ||
       _ /= 'Given'(),
       _ /= url("ws://127.0.0.1:80/websocket"),
       
@@ -81,5 +81,5 @@ request() ->
       
       _ /= 'Then'(),
       %% return a stream similar to L4
-   ]).
+   ].
 ```

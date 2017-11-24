@@ -76,8 +76,8 @@ When:
 and equivalent I/O declaration in Erlang flavoured syntax
 
 ```erlang
-request_lannding_page() ->
-   do([kscript ||
+request_landing_page() ->
+   [kscript ||
       _ /= 'Given'(),
       _ /= url("http://example.com"),
       
@@ -86,7 +86,7 @@ request_lannding_page() ->
       
       _ /= 'Then'(),
       return(_)
-   ]).
+   ].
 ```
 
 

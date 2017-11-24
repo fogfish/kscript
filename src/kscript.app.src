@@ -1,0 +1,14 @@
+{application, kscript,
+   [
+      {description, "BDD style for net i/o"},
+      {vsn,         "0.0.0"},
+      {modules,     []},
+      {registered,  []},
+      {applications,[
+         kernel
+        ,stdlib
+        ,knet
+      ]},
+      {env, []}
+   ]
+}.

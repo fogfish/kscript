@@ -18,7 +18,8 @@
    header/2, h/2, h/1, 
 
    %% Then
-   then/0
+   then/0,
+   require/2
 ]).
 
 %%%----------------------------------------------------------------------------   
@@ -101,5 +102,18 @@ then() ->
 status() -> lens:c(lens:map(http, #{}), lens:map(status,  none)).
 headers() -> lens:c(lens:map(http, #{}), lens:map(headers,    [])).
 content() -> lens:c(lens:map(http, #{}), lens:map(content,  none)).
+
+
+%%
+%%
+require(status, Expect) ->
+   require(status(), Expect);
+
+require(Lens, Expect) ->
+   fun(State) ->
+      Expect = lens:get(Lens, State),
+      [ok|State]
+   end.
+
 
 

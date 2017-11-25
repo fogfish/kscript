@@ -163,11 +163,11 @@ payload() ->
 %%
 %%
 require(status, Expect) ->
-   require(status(), Expect);
+   require(lens:map(status, undefined), Expect);
 
 require(Lens, Expect) ->
    fun(State) ->
-      case lens:get(Lens, State) of
+      case lens:get(lens:c(lens:map(http, #{}), Lens), State) of
          Expect ->
             [Expect|State];
          Value  ->

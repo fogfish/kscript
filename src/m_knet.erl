@@ -20,6 +20,7 @@
 
    %% Then
    then/0,
+   require/1,
    require/2
 ]).
 
@@ -159,6 +160,17 @@ payload() ->
    lens:c(lens:at(spec, #{}), active_socket(), lens:at(payload, undefined)).
 
 
+%%
+%% lens based matcher
+require(Lens) ->
+   fun(State) ->
+      case lens:get(lens:c(lens:map(http, #{}), Lens), State) of
+         {ok, Expect} ->
+            [Expect | State];
+         {error, Reason} ->
+            throw(Reason)
+      end
+   end.
 
 %%
 %%

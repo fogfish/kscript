@@ -38,11 +38,11 @@
 
 %%
 %% response data type
--record(http_response, {
-   status  = ?None    :: _,
-   headers = []       :: _,
-   content = ?None    :: _ 
-}).
+% -record(http_response, {
+%    status  = ?None    :: _,
+%    headers = []       :: _,
+%    content = ?None    :: _ 
+% }).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -73,13 +73,13 @@ req_content() ->
 
 
 status() ->
-   lens:c(lens:at(response), lens:ti(#http_response.status)).
+   lens:c(lens:at(response), lens:at(status, ?None)).
 
 headers() -> 
-   lens:c(lens:at(response), lens:ti(#http_response.headers)).
+   lens:c(lens:at(response), lens:at(headers, [])).
 
 content() -> 
-   lens:c(lens:at(response), lens:ti(#http_response.content)).
+   lens:c(lens:at(response), lens:at(content, ?None)).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -157,7 +157,7 @@ then() ->
       {ok, Content} = htcodec:decode(Http),
       [Content |
          [identity ||
-            cats:unit(State2#{response => #http_response{}}),
+            cats:unit(State2#{response => #{}}),
             lens:put(status(), Status, _),
             lens:put(headers(), Headers, _),
             lens:put(content(), Content, _)
@@ -180,7 +180,7 @@ require(Lens) ->
 %%
 %%
 require(status, Expect) ->
-   require(lens:ti(#http_response.status), Expect);
+   require(lens:at(status, ?None), Expect);
 
 require(Lens, Expect) ->
    fun(State) ->

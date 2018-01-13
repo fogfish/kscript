@@ -160,7 +160,7 @@ then() ->
          {ok, _} = Result -> 
             Result;
          {error, _} ->
-            erlang:iolist_to_binary(tl(Http))
+            {ok, erlang:iolist_to_binary(tl(Http))}
       end,
 
       [Content |

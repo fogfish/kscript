@@ -154,7 +154,15 @@ then() ->
       %% @todo get timeout from protocol parameters
       [Http | State2] = ( m_http:request() )(State1),
       {Status, _, Headers} = hd(Http),
-      {ok, Content} = htcodec:decode(Http),
+      {ok, Content} = case 
+         htcodec:decode(Http) 
+      of
+         {ok, _} = Result -> 
+            Result;
+         {error, _} ->
+            erlang:iolist_to_binary(tl(Http))
+      end,
+
       [Content |
          [identity ||
             cats:unit(State2#{response => #{}}),

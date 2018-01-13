@@ -3,6 +3,8 @@
 -module(m_knet).
 -compile({parse_transform, category}).
 
+-include_lib("datum/include/datum.hrl").
+
 %% monad interface
 -export([unit/1, fail/1, '>>='/2]).
 
@@ -24,6 +26,24 @@
    require/2
 ]).
 
+%%
+%% request data type
+-record(http_request, {
+   uri     = ?None    :: _,
+   method  = 'GET'    :: _,
+   headers = []       :: _,
+   content = ?None    :: _,
+   so      = []       :: _
+}).
+
+%%
+%% response data type
+-record(http_response, {
+   status  = ?None    :: _,
+   headers = []       :: _,
+   content = ?None    :: _ 
+}).
+
 %%%----------------------------------------------------------------------------   
 %%%
 %%% monad interface
@@ -32,35 +52,34 @@
 
 unit(X) ->
    m_state:unit(X).
-   % m_state:unit({ok, X}).
 
 fail(X) ->
    m_state:fail(X).
-   % m_state:fail({error, X}).
 
 '>>='(Mx, Fun) ->
    m_state:'>>='(Mx, Fun).
-   % join(fmap(Fun, Mx)).
 
-% join(Mx) ->
-%    fun(State) ->
-%       case Mx(State) of
-%          [{ok, Fun} | Y] ->
-%             Fun(Y);
-%          Error ->
-%             Error
-%       end
-%    end.
+%%%----------------------------------------------------------------------------   
+%%%
+%%% state lenses
+%%%
+%%%----------------------------------------------------------------------------
 
-% fmap(Fun, Mx) ->
-%    fun(State) ->
-%       case Mx(State) of
-%          [{ok, A} | Y] ->
-%             [{ok, Fun(A)}|Y];
-%          Error ->
-%             Error
-%       end
-%    end.   
+req_header(Head) ->
+   lens:c(lens:at(request), lens:ti(#http_request.headers), lens:pair(Head, ?None)).
+
+req_content() ->
+   lens:c(lens:at(request), lens:ti(#http_request.content)).
+
+
+status() ->
+   lens:c(lens:at(response), lens:ti(#http_response.status)).
+
+headers() -> 
+   lens:c(lens:at(response), lens:ti(#http_response.headers)).
+
+content() -> 
+   lens:c(lens:at(response), lens:ti(#http_response.content)).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -121,18 +140,25 @@ then() ->
    fun(State0) ->
       %%
       %% encode payload
-      Payload = kscript_codec:encode(
-         lens:get(header(<<"Content-Type">>), State0),
-         lens:get(payload(), State0)
-      ),
+      Payload = [option ||
+         lens:get(req_content(), State0),
+         cats:eitherT(htcodec:encode(lens:get(req_header(<<"Content-Type">>), State0), _))
+      ],
       [ _ | State1] = ( m_http:payload(Payload) )(State0),
+
+      %% @todo implement defaults
+      %%  method - GET
+      %%  Accept: */*
+      %%  Connection: close
 
       %% @todo get timeout from protocol parameters
       [Http | State2] = ( m_http:request() )(State1),
-      {Status, Headers, Content} = kscript_codec:decode(Http),
+      {Status, Headers, _} = hd(Http),
+      {ok, Content} = htcodec:decode(Http),
       [Content |
          [identity ||
-            lens:put(status(), Status, State2),
+            cats:unit(State2#{response => #http_response{}}),
+            lens:put(status(), Status, _),
             lens:put(headers(), Headers, _),
             lens:put(content(), Content, _)
          ]
@@ -140,31 +166,10 @@ then() ->
    end.
 
 %%
-%% lenses
-status() -> lens:c(lens:map(http, #{}), lens:map(status,  none)).
-headers() -> lens:c(lens:map(http, #{}), lens:map(headers,    [])).
-content() -> lens:c(lens:map(http, #{}), lens:map(content,  none)).
-
-%%
-%% extension to manipulate m_http payload
-active_socket() ->
-   fun(Fun, Map) ->
-      Key = maps:get(id, Map),
-      lens:fmap(fun(X) -> maps:put(Key, X, Map) end, Fun(maps:get(Key, Map, #{})))
-   end.
-
-header(Head) ->
-   lens:c(lens:at(spec, #{}), active_socket(), lens:at(head, []), lens:pair(Head, undefined)).
-
-payload() ->
-   lens:c(lens:at(spec, #{}), active_socket(), lens:at(payload, undefined)).
-
-
-%%
 %% lens based matcher
 require(Lens) ->
    fun(State) ->
-      case lens:get(lens:c(lens:map(http, #{}), Lens), State) of
+      case lens:get(lens:c(lens:at(response, #{}), Lens), State) of
          {ok, Expect} ->
             [Expect | State];
          {error, Reason} ->
@@ -175,11 +180,11 @@ require(Lens) ->
 %%
 %%
 require(status, Expect) ->
-   require(lens:map(status, undefined), Expect);
+   require(lens:ti(#http_response.status), Expect);
 
 require(Lens, Expect) ->
    fun(State) ->
-      case lens:get(lens:c(lens:map(http, #{}), Lens), State) of
+      case lens:get(lens:c(lens:at(response, #{}), Lens), State) of
          Expect ->
             [Expect|State];
          Value  ->

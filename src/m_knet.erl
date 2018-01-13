@@ -153,7 +153,7 @@ then() ->
 
       %% @todo get timeout from protocol parameters
       [Http | State2] = ( m_http:request() )(State1),
-      {Status, Headers, _} = hd(Http),
+      {Status, _, Headers} = hd(Http),
       {ok, Content} = htcodec:decode(Http),
       [Content |
          [identity ||
